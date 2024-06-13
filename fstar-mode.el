@@ -3485,9 +3485,9 @@ into blocks; process it as one large block instead."
      ((fstar-subp--in-tracked-region-p)
       (fstar-subp-retract-until (point)))
      ((consp arg)
-      (fstar-subp-enqueue-until (point)))
+      (fstar-subp-enqueue-until (save-excursion (fstar-subp-next-block-start) (point))))
      (t
-      (fstar-subp-advance-until (point))))))
+      (fstar-subp-advance-until (save-excursion (fstar-subp-next-block-start) (point)))))))
 
 (defun fstar-subp-advance-or-retract-to-point-lax (&optional arg)
   "Like `fstar-subp-advance-or-retract-to-point' with ARG, in lax mode."
