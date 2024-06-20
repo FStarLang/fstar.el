@@ -3770,6 +3770,22 @@ CONTEXT indicates where SYMBOL comes from."
        :line-to (elt .end 0)
        :col-to (elt .end 1)))))
 
+(defcustom fstar-prefer-fsti-when-jumping-to-modules t
+  "If non-nil (default), prefer jumping to the fsti when jumping to a module."
+  :group 'fstar
+  :type 'boolean)
+
+(defun fstar--module-path (path)
+  "Chose module path based upon user preference"
+  (if fstar-prefer-fsti-when-jumping-to-modules
+      (let ((testpath (concat path "i")))
+        (if (and
+             (string-suffix-p ".fst" path)
+             (file-readable-p testpath))
+            testpath
+          path))
+    path))
+
 (defun fstar-subp-json--parse-info (json)
   "Parse info structure from JSON."
   (pcase (or (cdr (assq 'kind json)) "symbol")
@@ -3790,7 +3806,7 @@ CONTEXT indicates where SYMBOL comes from."
     ((or "module" "namespace")
      (let-alist json
        (make-fstar-ns-or-mod-info
-        :name .name :doc nil :def-loc .path :kind .kind
+        :name .name :doc nil :def-loc (fstar--module-path .path) :kind .kind
         :loaded (fstar--lispify-false .loaded))))
     (other
      (message "Unrecognized info kind: %s.  Try updating fstar-mode." other))))
