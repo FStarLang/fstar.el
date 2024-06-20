@@ -5095,10 +5095,6 @@ includes a Tramp prefix)."
       (buffer-disable-undo)
       (current-buffer))))
 
-(defun fstar-subp-prover-args-safe-p (args)
-  "Check whether ARGS is a known-safe value for `fstar-subp-prover-args'."
-  (equal args 'fstar-subp-prover-args-for-compiler-hacking))
-
 (defcustom fstar-subp-prover-args nil
   "Arguments to pass to F* in interactive mode.
 
@@ -5130,8 +5126,7 @@ evaluating (fstar-subp-get-prover-args).  Note that passing
 multiple arguments as one string will not work: you should use
 \\='(\"--aa\" \"--bb\"), not \"--aa --bb\"."
   :group 'fstar
-  :type '(repeat string)
-  :safe #'fstar-subp-prover-args-safe-p)
+  :type '(repeat string))
 
 (defcustom fstar-subp-prover-additional-args nil
   "Additional arguments to pass to F* in interactive mode.
@@ -5182,30 +5177,6 @@ Non-nil NO-IDE means don't include `--ide' and `--in'."
                    (fstar-subp--parse-prover-args fstar-subp-prover-args)
                    (fstar-subp--parse-prover-args fstar-subp-prover-additional-args))))
     `(,(fstar-subp--buffer-file-name) ,@ide-flag "--smt" ,smt-path ,@usr-args)))
-
-(defun fstar-subp--prover-includes-for-compiler-hacking ()
-  "Compute a list of folders to include for hacking on the F* compiler."
-  (-if-let* ((fname (buffer-file-name))
-             (default-directory (locate-dominating-file fname "_tags")))
-      (let ((exclude-list '("." ".." "VS" "tests" "tools" "boot_fstis"
-                            "ocaml-output" "u_ocaml-output" "u_boot_fsts"))
-            (src-dir (expand-file-name "src" default-directory))
-            (include-dirs nil))
-        (push (expand-file-name "ulib") include-dirs)
-        (dolist (dir (directory-files src-dir nil))
-          (unless (member dir exclude-list)
-            (let ((fulldir (expand-file-name dir src-dir)))
-              (when (file-directory-p fulldir)
-                (push fulldir include-dirs)))))
-        (nreverse include-dirs))
-    (user-error (concat "Couldn't find _tags file while trying to "
-                        " set up F*-mode for compiler hacking."))))
-
-(defun fstar-subp-prover-args-for-compiler-hacking ()
-  "Compute arguments suitable for hacking on the F* compiler."
-  `("--eager_inference" "--lax" "--MLish" "--warn_error" "-272"
-    ,@(-mapcat (lambda (dir) `("--include" ,dir))
-               (fstar-subp--prover-includes-for-compiler-hacking))))
 
 (defvar fstar-subp--default-directory nil
   "Directory in which to start F*.
